@@ -1,0 +1,6 @@
+:root {
+  --app-shell-max-width: 1126px;
+  --board-column-width: 320px;
+  --board-card-radius: 16px;
+  --presence-indicator-size: 10px;
+}

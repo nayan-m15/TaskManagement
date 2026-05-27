@@ -1,0 +1,7 @@
+@import './variables.css';
+@import './themes.css';
+@import '../index.css';
+
+body {
+  min-width: 320px;
+}
