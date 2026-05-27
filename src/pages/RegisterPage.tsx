@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
+import { AtSign, Eye, EyeOff, LockKeyhole, Mail, Sparkles } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout'
 import { useAuth } from '../hooks/useAuth'
 import { register as registerUser } from '../services/authService'
@@ -21,6 +22,7 @@ function RegisterPage() {
   const { isAuthenticated, isInitialized, isLoading, setSession } = useAuth()
   const [submissionError, setSubmissionError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
   const {
     register,
     handleSubmit,
@@ -97,8 +99,15 @@ function RegisterPage() {
     <AuthLayout>
       <section className="auth-shell">
         <div className="auth-panel">
-          <p className="auth-eyebrow">Create your account</p>
-          <h1>Start organizing your work</h1>
+          <div className="auth-brand-lockup">
+            <div className="auth-brand-mark" aria-hidden="true">
+              <Sparkles size={18} strokeWidth={2.1} />
+            </div>
+            <div>
+              <p className="auth-eyebrow">Create your account</p>
+              <h1>Start organizing your work</h1>
+            </div>
+          </div>
           <p className="auth-copy">
             Set up your profile to access your task dashboard and collaborate with
             confidence.
@@ -107,16 +116,26 @@ function RegisterPage() {
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="auth-field">
               <label htmlFor="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                autoComplete="username"
-                placeholder="Choose a username"
-                aria-invalid={errors.username ? 'true' : 'false'}
-                {...register('username')}
-              />
+              <div
+                className={`auth-input-shell ${errors.username ? 'auth-input-shell-invalid' : ''}`}
+              >
+                <AtSign className="auth-input-icon" size={18} aria-hidden="true" />
+                <input
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  placeholder="Choose a username"
+                  aria-invalid={errors.username ? 'true' : 'false'}
+                  aria-describedby={errors.username ? 'register-username-error' : undefined}
+                  {...register('username')}
+                />
+              </div>
               {errors.username ? (
-                <p className="auth-message auth-message-error" role="alert">
+                <p
+                  id="register-username-error"
+                  className="auth-message auth-message-error"
+                  role="alert"
+                >
                   {errors.username.message}
                 </p>
               ) : null}
@@ -124,16 +143,26 @@ function RegisterPage() {
 
             <div className="auth-field">
               <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                aria-invalid={errors.email ? 'true' : 'false'}
-                {...register('email')}
-              />
+              <div
+                className={`auth-input-shell ${errors.email ? 'auth-input-shell-invalid' : ''}`}
+              >
+                <Mail className="auth-input-icon" size={18} aria-hidden="true" />
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  aria-invalid={errors.email ? 'true' : 'false'}
+                  aria-describedby={errors.email ? 'register-email-error' : undefined}
+                  {...register('email')}
+                />
+              </div>
               {errors.email ? (
-                <p className="auth-message auth-message-error" role="alert">
+                <p
+                  id="register-email-error"
+                  className="auth-message auth-message-error"
+                  role="alert"
+                >
                   {errors.email.message}
                 </p>
               ) : null}
@@ -141,16 +170,39 @@ function RegisterPage() {
 
             <div className="auth-field">
               <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="Create a secure password"
-                aria-invalid={errors.password ? 'true' : 'false'}
-                {...register('password')}
-              />
+              <div
+                className={`auth-input-shell ${errors.password ? 'auth-input-shell-invalid' : ''}`}
+              >
+                <LockKeyhole className="auth-input-icon" size={18} aria-hidden="true" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  placeholder="Create a secure password"
+                  aria-invalid={errors.password ? 'true' : 'false'}
+                  aria-describedby={errors.password ? 'register-password-error' : undefined}
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  className="auth-input-toggle"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <EyeOff size={18} aria-hidden="true" />
+                  ) : (
+                    <Eye size={18} aria-hidden="true" />
+                  )}
+                </button>
+              </div>
               {errors.password ? (
-                <p className="auth-message auth-message-error" role="alert">
+                <p
+                  id="register-password-error"
+                  className="auth-message auth-message-error"
+                  role="alert"
+                >
                   {errors.password.message}
                 </p>
               ) : null}
@@ -173,9 +225,13 @@ function RegisterPage() {
               className="auth-submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Creating account...' : 'Create account'}
+              <span>{isSubmitting ? 'Creating account...' : 'Create account'}</span>
             </button>
           </form>
+
+          <div className="auth-divider" aria-hidden="true">
+            <span>Protected onboarding flow</span>
+          </div>
 
           <p className="auth-footer">
             Already registered? <Link to={ROUTES.login}>Sign in</Link>

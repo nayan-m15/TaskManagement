@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
+import { Mail, Sparkles } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout'
 import { ROUTES } from '../routes/routeConstants'
 import { requestPasswordReset } from '../services/authService'
@@ -64,8 +65,15 @@ function ForgotPasswordPage() {
     <AuthLayout>
       <section className="auth-shell">
         <div className="auth-panel">
-          <p className="auth-eyebrow">Recover access</p>
-          <h1>Reset your password</h1>
+          <div className="auth-brand-lockup">
+            <div className="auth-brand-mark" aria-hidden="true">
+              <Sparkles size={18} strokeWidth={2.1} />
+            </div>
+            <div>
+              <p className="auth-eyebrow">Recover access</p>
+              <h1>Reset your password</h1>
+            </div>
+          </div>
           <p className="auth-copy">
             Enter the email linked to your account and we&apos;ll send a reset link.
           </p>
@@ -73,16 +81,26 @@ function ForgotPasswordPage() {
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="auth-field">
               <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                aria-invalid={errors.email ? 'true' : 'false'}
-                {...register('email')}
-              />
+              <div
+                className={`auth-input-shell ${errors.email ? 'auth-input-shell-invalid' : ''}`}
+              >
+                <Mail className="auth-input-icon" size={18} aria-hidden="true" />
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  aria-invalid={errors.email ? 'true' : 'false'}
+                  aria-describedby={errors.email ? 'forgot-email-error' : undefined}
+                  {...register('email')}
+                />
+              </div>
               {errors.email ? (
-                <p className="auth-message auth-message-error" role="alert">
+                <p
+                  id="forgot-email-error"
+                  className="auth-message auth-message-error"
+                  role="alert"
+                >
                   {errors.email.message}
                 </p>
               ) : null}
@@ -105,9 +123,13 @@ function ForgotPasswordPage() {
               className="auth-submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Sending reset link...' : 'Send reset link'}
+              <span>{isSubmitting ? 'Sending reset link...' : 'Send reset link'}</span>
             </button>
           </form>
+
+          <div className="auth-divider" aria-hidden="true">
+            <span>Password recovery</span>
+          </div>
 
           <p className="auth-footer">
             Remembered your password? <Link to={ROUTES.login}>Back to login</Link>

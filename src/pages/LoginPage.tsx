@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
+import { Eye, EyeOff, LockKeyhole, Mail, Sparkles } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout'
 import { useAuth } from '../hooks/useAuth'
 import { login } from '../services/authService'
@@ -20,6 +21,7 @@ function LoginPage() {
   const location = useLocation()
   const { isAuthenticated, isInitialized, isLoading, setSession } = useAuth()
   const [submissionError, setSubmissionError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
   const {
     register,
     handleSubmit,
@@ -32,16 +34,6 @@ function LoginPage() {
     },
   })
 
-  const redirectPath =
-    typeof location.state === 'object' &&
-    location.state &&
-    'from' in location.state &&
-    typeof location.state.from === 'object' &&
-    location.state.from &&
-    'pathname' in location.state.from &&
-    typeof location.state.from.pathname === 'string'
-      ? location.state.from.pathname
-      : ROUTES.dashboard
   const registrationComplete =
     typeof location.state === 'object' &&
     location.state &&
@@ -59,7 +51,7 @@ function LoginPage() {
       }
 
       setSession(session)
-      navigate(redirectPath, { replace: true })
+      navigate(ROUTES.dashboard, { replace: true })
     } catch (error) {
       setSubmissionError(
         error instanceof Error ? error.message : 'Unable to sign in right now.',
@@ -88,8 +80,15 @@ function LoginPage() {
     <AuthLayout>
       <section className="auth-shell">
         <div className="auth-panel">
-          <p className="auth-eyebrow">Welcome back</p>
-          <h1>Sign in to continue</h1>
+          <div className="auth-brand-lockup">
+            <div className="auth-brand-mark" aria-hidden="true">
+              <Sparkles size={18} strokeWidth={2.1} />
+            </div>
+            <div>
+              <p className="auth-eyebrow">Welcome back</p>
+              <h1>Sign in to continue</h1>
+            </div>
+          </div>
           <p className="auth-copy">
             Access your boards, tasks, and workspace activity with your email and
             password.
@@ -104,16 +103,26 @@ function LoginPage() {
           <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="auth-field">
               <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                aria-invalid={errors.email ? 'true' : 'false'}
-                {...register('email')}
-              />
+              <div
+                className={`auth-input-shell ${errors.email ? 'auth-input-shell-invalid' : ''}`}
+              >
+                <Mail className="auth-input-icon" size={18} aria-hidden="true" />
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  aria-invalid={errors.email ? 'true' : 'false'}
+                  aria-describedby={errors.email ? 'login-email-error' : undefined}
+                  {...register('email')}
+                />
+              </div>
               {errors.email ? (
-                <p className="auth-message auth-message-error" role="alert">
+                <p
+                  id="login-email-error"
+                  className="auth-message auth-message-error"
+                  role="alert"
+                >
                   {errors.email.message}
                 </p>
               ) : null}
@@ -124,16 +133,39 @@ function LoginPage() {
                 <label htmlFor="password">Password</label>
                 <Link to={ROUTES.forgotPassword}>Forgot password?</Link>
               </div>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="Enter your password"
-                aria-invalid={errors.password ? 'true' : 'false'}
-                {...register('password')}
-              />
+              <div
+                className={`auth-input-shell ${errors.password ? 'auth-input-shell-invalid' : ''}`}
+              >
+                <LockKeyhole className="auth-input-icon" size={18} aria-hidden="true" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  aria-invalid={errors.password ? 'true' : 'false'}
+                  aria-describedby={errors.password ? 'login-password-error' : undefined}
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  className="auth-input-toggle"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <EyeOff size={18} aria-hidden="true" />
+                  ) : (
+                    <Eye size={18} aria-hidden="true" />
+                  )}
+                </button>
+              </div>
               {errors.password ? (
-                <p className="auth-message auth-message-error" role="alert">
+                <p
+                  id="login-password-error"
+                  className="auth-message auth-message-error"
+                  role="alert"
+                >
                   {errors.password.message}
                 </p>
               ) : null}
@@ -150,9 +182,13 @@ function LoginPage() {
               className="auth-submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
+              <span>{isSubmitting ? 'Signing in...' : 'Sign in'}</span>
             </button>
           </form>
+
+          <div className="auth-divider" aria-hidden="true">
+            <span>Secure email sign in</span>
+          </div>
 
           <p className="auth-footer">
             Need an account? <Link to={ROUTES.register}>Create one</Link>

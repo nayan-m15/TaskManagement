@@ -21,7 +21,7 @@ function DashboardPage() {
     try {
       await logout()
       clearSession()
-      navigate(ROUTES.login, { replace: true })
+      navigate(ROUTES.home, { replace: true })
     } catch (error) {
       setLogoutError(
         error instanceof Error ? error.message : 'Unable to sign out right now.',
