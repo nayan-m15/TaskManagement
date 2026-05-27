@@ -5,7 +5,18 @@ import { useAuth } from '../hooks/useAuth'
 
 function ProtectedRoute({ children }: PropsWithChildren) {
   const location = useLocation()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading, isInitialized } = useAuth()
+
+  if (isLoading || !isInitialized) {
+    return (
+      <section className="auth-status-screen" aria-live="polite">
+        <div className="auth-status-card">
+          <h2>Checking your session</h2>
+          <p>Please wait while we restore your workspace.</p>
+        </div>
+      </section>
+    )
+  }
 
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.login} replace state={{ from: location }} />

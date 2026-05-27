@@ -1,11 +1,186 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { z } from 'zod'
 import AuthLayout from '../layouts/AuthLayout'
+import { useAuth } from '../hooks/useAuth'
+import { register as registerUser } from '../services/authService'
+import { ROUTES } from '../routes/routeConstants'
+
+const registerSchema = z.object({
+  username: z.string().trim().min(1, 'Username is required.'),
+  email: z.string().email('Enter a valid email address.'),
+  password: z.string().min(8, 'Password must be at least 8 characters.'),
+})
+
+type RegisterFormValues = z.infer<typeof registerSchema>
 
 function RegisterPage() {
+  const navigate = useNavigate()
+  const { isAuthenticated, isInitialized, isLoading, setSession } = useAuth()
+  const [submissionError, setSubmissionError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+    },
+  })
+
+  useEffect(() => {
+    if (!successMessage) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      navigate(ROUTES.login, {
+        replace: true,
+        state: {
+          registrationComplete: true,
+        },
+      })
+    }, 1400)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [navigate, successMessage])
+
+  async function onSubmit(values: RegisterFormValues) {
+    setSubmissionError(null)
+    setSuccessMessage(null)
+
+    try {
+      const result = await registerUser(values)
+
+      if (result.session) {
+        setSession(result.session)
+        navigate(ROUTES.dashboard, { replace: true })
+        return
+      }
+
+      setSuccessMessage(
+        result.requiresEmailConfirmation
+          ? 'Account created. Check your email to confirm your account, then sign in.'
+          : 'Account created successfully. You can sign in now.',
+      )
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error ? error.message : 'Unable to create your account.',
+      )
+    }
+  }
+
+  if (isInitialized && isAuthenticated) {
+    return <Navigate to={ROUTES.dashboard} replace />
+  }
+
+  if (isLoading || !isInitialized) {
+    return (
+      <AuthLayout>
+        <section className="auth-status-screen" aria-live="polite">
+          <div className="auth-status-card">
+            <h2>Checking your session</h2>
+            <p>Please wait while we prepare registration.</p>
+          </div>
+        </section>
+      </AuthLayout>
+    )
+  }
+
   return (
     <AuthLayout>
-      <section>
-        <h1>Register</h1>
-        <p>TODO: implement workspace onboarding and team invitation flows.</p>
+      <section className="auth-shell">
+        <div className="auth-panel">
+          <p className="auth-eyebrow">Create your account</p>
+          <h1>Start organizing your work</h1>
+          <p className="auth-copy">
+            Set up your profile to access your task dashboard and collaborate with
+            confidence.
+          </p>
+
+          <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div className="auth-field">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                autoComplete="username"
+                placeholder="Choose a username"
+                aria-invalid={errors.username ? 'true' : 'false'}
+                {...register('username')}
+              />
+              {errors.username ? (
+                <p className="auth-message auth-message-error" role="alert">
+                  {errors.username.message}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="auth-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                aria-invalid={errors.email ? 'true' : 'false'}
+                {...register('email')}
+              />
+              {errors.email ? (
+                <p className="auth-message auth-message-error" role="alert">
+                  {errors.email.message}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="auth-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Create a secure password"
+                aria-invalid={errors.password ? 'true' : 'false'}
+                {...register('password')}
+              />
+              {errors.password ? (
+                <p className="auth-message auth-message-error" role="alert">
+                  {errors.password.message}
+                </p>
+              ) : null}
+            </div>
+
+            {submissionError ? (
+              <p className="auth-message auth-message-error" role="alert">
+                {submissionError}
+              </p>
+            ) : null}
+
+            {successMessage ? (
+              <p className="auth-message auth-message-success" role="status">
+                {successMessage}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating account...' : 'Create account'}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Already registered? <Link to={ROUTES.login}>Sign in</Link>
+          </p>
+        </div>
       </section>
     </AuthLayout>
   )
