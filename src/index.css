@@ -1015,7 +1015,8 @@ img {
 
 .kanban-board-shell,
 .kanban-column,
-.kanban-modal {
+.kanban-modal,
+.task-drawer {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   background: var(--color-surface);
@@ -1218,6 +1219,7 @@ img {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .kanban-task-drag-handle,
@@ -1229,18 +1231,88 @@ img {
   border-radius: var(--radius-md);
 }
 
-.kanban-modal-backdrop {
+.task-card-label-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.task-mini-label,
+.task-badge {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.task-mini-label {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+}
+
+.task-mini-label-dot,
+.task-label-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.task-badge-neutral,
+.task-badge-none {
+  background: var(--color-surface-muted);
+  color: var(--color-text-primary);
+}
+
+.task-badge-info {
+  background: var(--color-info-surface);
+  color: var(--color-info-text);
+}
+
+.task-badge-warning,
+.task-badge-due-today {
+  background: var(--color-warning-surface);
+  color: var(--color-warning-text);
+}
+
+.task-badge-danger,
+.task-badge-overdue {
+  background: var(--color-danger-surface);
+  color: var(--color-danger-text);
+}
+
+.task-badge-upcoming {
+  background: var(--color-success-surface);
+  color: var(--color-success-text);
+}
+
+.kanban-modal-backdrop,
+.task-drawer-backdrop {
   position: fixed;
   inset: 0;
   padding: var(--space-6);
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: flex-end;
   background: var(--color-overlay);
   z-index: 30;
 }
 
 .kanban-modal {
   width: min(100%, 760px);
+  max-height: calc(100svh - 48px);
+  padding: var(--space-6);
+  overflow: auto;
+  display: grid;
+  gap: var(--space-5);
+}
+
+.task-drawer {
+  width: min(100%, 1120px);
   max-height: calc(100svh - 48px);
   padding: var(--space-6);
   overflow: auto;
@@ -1291,6 +1363,148 @@ img {
   gap: var(--space-3);
 }
 
+.task-drawer-header,
+.task-section-header,
+.task-comment-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.task-drawer-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: var(--space-5);
+}
+
+.task-drawer-main,
+.task-drawer-sidebar,
+.task-drawer-form,
+.task-label-selector,
+.task-comment-composer,
+.task-comment-editor,
+.task-comment-body,
+.task-activity-content {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.task-drawer-section {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-subtle);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.task-inline-field,
+.task-section-actions,
+.task-label-create-fields,
+.task-card-label-row,
+.task-label-grid {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.task-inline-field .kanban-input {
+  flex: 1;
+}
+
+.task-inline-button,
+.task-inline-link {
+  min-height: 44px;
+}
+
+.task-label-grid {
+  gap: var(--space-2);
+}
+
+.task-label-chip {
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.task-label-chip-selected {
+  border-color: var(--color-accent);
+  background: var(--color-surface-accent);
+  color: var(--color-accent-strong);
+}
+
+.task-label-create-row {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.task-color-input {
+  width: 56px;
+  min-height: 52px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.task-section-help,
+.task-comment-item p,
+.task-activity-content {
+  color: var(--color-text-secondary);
+}
+
+.task-activity-list,
+.task-comment-list {
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.task-activity-item,
+.task-comment-item {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.task-activity-icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-surface-accent);
+  color: var(--color-accent);
+}
+
+.task-icon-button {
+  width: 40px;
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.task-icon-button-danger {
+  color: var(--color-danger-text);
+}
+
 .not-found-page {
   width: min(100%, var(--content-max-width));
   min-height: 100svh;
@@ -1330,7 +1544,8 @@ code,
 @media (max-width: 1024px) {
   .home-hero,
   .dashboard-shell,
-  .dashboard-detail-panels {
+  .dashboard-detail-panels,
+  .task-drawer-body {
     grid-template-columns: 1fr;
   }
 
@@ -1431,12 +1646,29 @@ code,
 
   .dashboard-header-actions,
   .dashboard-inline-link,
-  .kanban-modal-actions {
+  .kanban-modal-actions,
+  .task-section-actions {
     width: 100%;
   }
 
-  .kanban-modal-backdrop {
+  .kanban-modal-backdrop,
+  .task-drawer-backdrop {
     padding: var(--space-4);
+  }
+
+  .kanban-modal-actions,
+  .task-inline-field,
+  .task-comment-header,
+  .task-label-create-fields {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-drawer {
+    width: 100%;
+    min-height: calc(100svh - 32px);
+    max-height: calc(100svh - 32px);
+    padding: var(--space-5);
   }
 
   .kanban-modal-actions {

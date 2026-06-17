@@ -1,7 +1,9 @@
 import type { ButtonHTMLAttributes } from 'react'
-import { CalendarDays, Clock3, GripVertical, Text } from 'lucide-react'
+import { Clock3, GripVertical, MessageSquare, Tags, Text } from 'lucide-react'
 import { formatDate } from '../../utils/formatDate'
 import type { BoardTask } from '../../types/kanban'
+import DueDateBadge from './DueDateBadge'
+import TaskPriorityBadge from './TaskPriorityBadge'
 
 interface TaskCardProps {
   task: BoardTask
@@ -22,7 +24,9 @@ function TaskCard({ task, isDragging = false, dragHandleProps, onEdit }: TaskCar
         >
           <GripVertical size={16} aria-hidden="true" />
         </button>
-        {task.priority ? <span className="kanban-priority-pill">{task.priority}</span> : null}
+        <div className="dashboard-badge-row">
+          <TaskPriorityBadge priority={task.priority} />
+        </div>
       </div>
 
       <button
@@ -43,12 +47,7 @@ function TaskCard({ task, isDragging = false, dragHandleProps, onEdit }: TaskCar
           </div>
 
           <div className="kanban-task-meta">
-            {task.dueDate ? (
-              <span>
-                <CalendarDays size={14} aria-hidden="true" />
-                Due {formatDate(task.dueDate)}
-              </span>
-            ) : null}
+            <DueDateBadge dueDate={task.dueDate} />
             {task.createdAt ? (
               <span>
                 <Clock3 size={14} aria-hidden="true" />
@@ -61,6 +60,16 @@ function TaskCard({ task, isDragging = false, dragHandleProps, onEdit }: TaskCar
                 Notes attached
               </span>
             ) : null}
+            {task.labels.length ? (
+              <span>
+                <Tags size={14} aria-hidden="true" />
+                {task.labels.length} label{task.labels.length === 1 ? '' : 's'}
+              </span>
+            ) : null}
+            <span>
+              <MessageSquare size={14} aria-hidden="true" />
+              Open details
+            </span>
           </div>
 
           <div className="kanban-task-footer">
@@ -73,6 +82,20 @@ function TaskCard({ task, isDragging = false, dragHandleProps, onEdit }: TaskCar
                 Unassigned
               </span>
             )}
+            {task.labels.length ? (
+              <div className="task-card-label-row" aria-label="Task labels">
+                {task.labels.slice(0, 2).map((label) => (
+                  <span key={label.id} className="task-mini-label">
+                    <span
+                      className="task-mini-label-dot"
+                      style={{ backgroundColor: label.color || 'var(--color-text-muted)' }}
+                      aria-hidden="true"
+                    />
+                    {label.name}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </button>

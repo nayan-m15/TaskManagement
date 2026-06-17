@@ -5,7 +5,7 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { useAuth } from '../hooks/useAuth'
 import { useKanbanBoard } from '../hooks/useKanbanBoard'
 import KanbanBoard from '../components/board/KanbanBoard'
-import TaskModal from '../components/board/TaskModal'
+import TaskDrawer from '../components/board/TaskDrawer'
 import { ROUTES } from '../routes/routeConstants'
 import type { BoardTask, TaskFormValues } from '../types/kanban'
 
@@ -32,13 +32,10 @@ function BoardPage() {
     isError,
     error,
     createTask,
-    updateTask,
     reorderTasks,
     isCreatingTask,
-    isUpdatingTask,
     isReorderingTasks,
     createTaskError,
-    updateTaskError,
     refetch,
   } = useKanbanBoard({
     boardId,
@@ -71,6 +68,36 @@ function BoardPage() {
     ]
   }, [data])
 
+  const hashModalState = useMemo<ModalState>(() => {
+    if (!data) {
+      return null
+    }
+
+    const taskIdFromHash = window.location.hash.startsWith('#task-')
+      ? window.location.hash.replace('#task-', '')
+      : ''
+
+    if (!taskIdFromHash) {
+      return null
+    }
+
+    const matchedTask = data.columns
+      .flatMap((column) => column.tasks)
+      .find((task) => task.id === taskIdFromHash)
+
+    if (!matchedTask) {
+      return null
+    }
+
+    return {
+      mode: 'edit',
+      task: matchedTask,
+      columnId: matchedTask.columnId,
+    }
+  }, [data])
+
+  const activeDrawerState = modalState ?? hashModalState
+
   if (!boardId) {
     return <Navigate to={ROUTES.dashboard} replace />
   }
@@ -80,13 +107,17 @@ function BoardPage() {
       return
     }
 
-    if (modalState.mode === 'create') {
-      await createTask({ values })
-    } else {
-      await updateTask({
-        taskId: modalState.task.id,
-        values,
-      })
+    if (modalState.mode !== 'create') {
+      return
+    }
+
+    await createTask({ values })
+    setModalState(null)
+  }
+
+  function handleCloseDrawer() {
+    if (window.location.hash.startsWith('#task-')) {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
     }
 
     setModalState(null)
@@ -206,25 +237,17 @@ function BoardPage() {
         </div>
       </main>
 
-      {data && modalState ? (
-        <TaskModal
-          mode={modalState.mode}
-          columns={data.columns}
-          members={data.members}
-          task={modalState.mode === 'edit' ? modalState.task : null}
-          selectedColumnId={modalState.columnId}
-          isSubmitting={isCreatingTask || isUpdatingTask}
-          errorMessage={
-            modalState.mode === 'create'
-              ? createTaskError instanceof Error
-                ? createTaskError.message
-                : null
-              : updateTaskError instanceof Error
-                ? updateTaskError.message
-                : null
-          }
-          onClose={() => setModalState(null)}
-          onSubmit={handleTaskSubmit}
+      {data && activeDrawerState ? (
+        <TaskDrawer
+          mode={activeDrawerState.mode}
+          board={data}
+          task={activeDrawerState.mode === 'edit' ? activeDrawerState.task : null}
+          selectedColumnId={activeDrawerState.columnId}
+          currentUserId={session?.user.id}
+          isCreatingTask={isCreatingTask}
+          createTaskError={createTaskError instanceof Error ? createTaskError.message : null}
+          onClose={handleCloseDrawer}
+          onCreateTask={handleTaskSubmit}
         />
       ) : null}
     </DashboardLayout>

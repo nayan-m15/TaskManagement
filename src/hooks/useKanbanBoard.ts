@@ -50,6 +50,7 @@ function normalizeTaskValues(values: TaskFormValues) {
     priority: values.priority || null,
     assignedTo: values.assignedTo || null,
     columnId: values.columnId,
+    labelIds: values.labelIds,
   }
 }
 
@@ -77,15 +78,26 @@ export function useKanbanBoard({ boardId, userId }: UseKanbanBoardOptions) {
   })
 
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, values }: UpdateTaskVariables) =>
-      updateBoardTask(taskId, normalizeTaskValues(values)),
+    mutationFn: async ({ taskId, values }: UpdateTaskVariables) => {
+      if (!userId) {
+        throw new Error('User context is missing.')
+      }
+
+      return updateBoardTask(taskId, userId, normalizeTaskValues(values))
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey })
     },
   })
 
   const reorderMutation = useMutation({
-    mutationFn: async ({ positions }: ReorderTasksVariables) => reorderBoardTasks(positions),
+    mutationFn: async ({ positions }: ReorderTasksVariables) => {
+      if (!userId) {
+        throw new Error('User context is missing.')
+      }
+
+      return reorderBoardTasks(userId, positions)
+    },
     onMutate: async ({ nextBoard }) => {
       await queryClient.cancelQueries({ queryKey })
       const previousBoard = queryClient.getQueryData<BoardDetails | null>(queryKey) ?? null
