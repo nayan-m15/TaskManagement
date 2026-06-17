@@ -69,6 +69,7 @@
   --color-accent-strong: var(--color-primary-700);
   --color-accent-subtle: var(--color-primary-100);
   --color-focus-ring: rgba(79, 70, 229, 0.18);
+  --color-overlay: rgba(15, 23, 42, 0.45);
   --color-success-surface: var(--color-success-50);
   --color-success-text: var(--color-success-700);
   --color-danger-surface: var(--color-danger-50);
@@ -91,6 +92,7 @@
   --color-accent-strong: #c7d2fe;
   --color-accent-subtle: rgba(129, 140, 248, 0.16);
   --color-focus-ring: rgba(129, 140, 248, 0.22);
+  --color-overlay: rgba(11, 18, 32, 0.72);
   --color-success-surface: rgba(22, 163, 74, 0.14);
   --color-success-text: #9fe7b4;
   --color-danger-surface: rgba(220, 38, 38, 0.16);

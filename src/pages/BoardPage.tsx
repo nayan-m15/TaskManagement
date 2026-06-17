@@ -1,17 +1,95 @@
+import { useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { CalendarDays, ChevronLeft, ListTodo } from 'lucide-react'
+import { ChevronLeft, FolderKanban, ListTodo, Users } from 'lucide-react'
 import DashboardLayout from '../layouts/DashboardLayout'
-import DashboardSection from '../components/dashboard/DashboardSection'
-import { useBoardDetail } from '../hooks/useDashboardData'
+import { useAuth } from '../hooks/useAuth'
+import { useKanbanBoard } from '../hooks/useKanbanBoard'
+import KanbanBoard from '../components/board/KanbanBoard'
+import TaskModal from '../components/board/TaskModal'
 import { ROUTES } from '../routes/routeConstants'
-import { formatDate } from '../utils/formatDate'
+import type { BoardTask, TaskFormValues } from '../types/kanban'
+
+type ModalState =
+  | {
+      mode: 'create'
+      columnId: string
+      task?: undefined
+    }
+  | {
+      mode: 'edit'
+      columnId: string
+      task: BoardTask
+    }
+  | null
 
 function BoardPage() {
   const { boardId } = useParams()
-  const { data, isLoading, isError } = useBoardDetail(boardId)
+  const { session } = useAuth()
+  const [modalState, setModalState] = useState<ModalState>(null)
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    createTask,
+    updateTask,
+    reorderTasks,
+    isCreatingTask,
+    isUpdatingTask,
+    isReorderingTasks,
+    createTaskError,
+    updateTaskError,
+    refetch,
+  } = useKanbanBoard({
+    boardId,
+    userId: session?.user.id,
+  })
+
+  const boardStats = useMemo(() => {
+    if (!data) {
+      return []
+    }
+
+    const totalTasks = data.columns.reduce((count, column) => count + column.tasks.length, 0)
+
+    return [
+      {
+        label: 'Columns',
+        value: data.columns.length,
+        icon: FolderKanban,
+      },
+      {
+        label: 'Tasks',
+        value: totalTasks,
+        icon: ListTodo,
+      },
+      {
+        label: 'Members',
+        value: data.members.length,
+        icon: Users,
+      },
+    ]
+  }, [data])
 
   if (!boardId) {
     return <Navigate to={ROUTES.dashboard} replace />
+  }
+
+  async function handleTaskSubmit(values: TaskFormValues) {
+    if (!modalState) {
+      return
+    }
+
+    if (modalState.mode === 'create') {
+      await createTask({ values })
+    } else {
+      await updateTask({
+        taskId: modalState.task.id,
+        values,
+      })
+    }
+
+    setModalState(null)
   }
 
   return (
@@ -24,114 +102,131 @@ function BoardPage() {
                 <ChevronLeft size={16} aria-hidden="true" />
                 Back to dashboard
               </Link>
-              <p className="auth-eyebrow">Board overview</p>
-              <h1>{data?.board?.name ?? 'Board details'}</h1>
+              <p className="auth-eyebrow">Board workspace</p>
+              <h1>{data?.title ?? 'Board details'}</h1>
               <p className="auth-copy">
-                {data?.board?.workspaceName
-                  ? `View recent tasks and deadlines for ${data.board.workspaceName}.`
-                  : 'View recent tasks and deadlines for this board.'}
+                {data?.workspaceName
+                  ? `Manage tasks for ${data.workspaceName} with multi-column planning, realtime updates, and drag-and-drop ordering.`
+                  : 'Manage tasks with multi-column planning, realtime updates, and drag-and-drop ordering.'}
               </p>
+            </div>
+            <div className="dashboard-header-actions">
+              <button
+                type="button"
+                className="auth-submit"
+                onClick={() =>
+                  setModalState({
+                    mode: 'create',
+                    columnId: data?.columns[0]?.id ?? '',
+                  })
+                }
+                disabled={!data?.columns.length}
+              >
+                New task
+              </button>
+              <button
+                type="button"
+                className="auth-submit auth-submit-secondary"
+                onClick={() => void refetch()}
+              >
+                Refresh board
+              </button>
             </div>
           </header>
 
           {isLoading ? (
             <section className="dashboard-feedback-card" aria-live="polite">
               <p className="dashboard-card-label">Loading</p>
-              <h2>Loading board details</h2>
-              <p>We are gathering the latest tasks and board metadata.</p>
+              <h2>Loading your board</h2>
+              <p>We are preparing columns, tasks, members, and board context.</p>
             </section>
           ) : null}
 
           {!isLoading && isError ? (
             <section className="dashboard-feedback-card" role="alert">
               <p className="dashboard-card-label">Unavailable</p>
-              <h2>Board details could not be loaded</h2>
-              <p>This board may no longer exist, or your session may not have access to it.</p>
+              <h2>Board could not be loaded</h2>
+              <p>{error instanceof Error ? error.message : 'Try again in a moment.'}</p>
             </section>
           ) : null}
 
-          {!isLoading && !isError && !data?.board ? (
+          {!isLoading && !isError && !data ? (
             <section className="dashboard-feedback-card">
               <p className="dashboard-card-label">Not found</p>
               <h2>Board not found</h2>
-              <p>No board matched this link in the current workspace context.</p>
+              <p>No board matched this link, or your session no longer has access to it.</p>
             </section>
           ) : null}
 
-          {!isLoading && !isError && data?.board ? (
+          {!isLoading && !isError && data ? (
             <>
-              <section className="dashboard-stats-grid" aria-label="Board summary">
-                <article className="dashboard-stat-card">
-                  <div className="dashboard-stat-icon">
-                    <ListTodo size={18} aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="dashboard-card-label">Tasks</p>
-                    <strong>{data.tasks.length}</strong>
-                  </div>
-                </article>
+              <section className="dashboard-stats-grid dashboard-stats-grid-compact" aria-label="Board summary">
+                {boardStats.map((stat) => {
+                  const Icon = stat.icon
 
-                <article className="dashboard-stat-card">
-                  <div className="dashboard-stat-icon">
-                    <CalendarDays size={18} aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="dashboard-card-label">Last updated</p>
-                    <strong>
-                      {data.board.updatedAt
-                        ? formatDate(data.board.updatedAt)
-                        : data.board.createdAt
-                          ? formatDate(data.board.createdAt)
-                          : 'Unavailable'}
-                    </strong>
-                  </div>
-                </article>
+                  return (
+                    <article key={stat.label} className="dashboard-stat-card">
+                      <div className="dashboard-stat-icon">
+                        <Icon size={18} aria-hidden="true" />
+                      </div>
+                      <div>
+                        <p className="dashboard-card-label">{stat.label}</p>
+                        <strong>{stat.value}</strong>
+                      </div>
+                    </article>
+                  )
+                })}
               </section>
 
-              <DashboardSection
-                eyebrow="Board tasks"
-                title="Task list"
-                description="Tasks are ordered with the nearest due items first so the most urgent work stays visible."
-              >
-                {data.tasks.length > 0 ? (
-                  <ul className="dashboard-task-list" aria-label="Board tasks">
-                    {data.tasks.map((task) => (
-                      <li id={`task-${task.id}`} key={task.id} className="dashboard-task-item">
-                        <div className="dashboard-task-main">
-                          <div className="dashboard-item-heading">
-                            <h3>{task.title}</h3>
-                            <div className="dashboard-badge-row">
-                              {task.priority ? (
-                                <span className="dashboard-badge dashboard-badge-neutral">
-                                  {task.priority}
-                                </span>
-                              ) : null}
-                              {task.status ? (
-                                <span className="dashboard-badge dashboard-badge-accent">
-                                  {task.status}
-                                </span>
-                              ) : null}
-                            </div>
-                          </div>
-                          <div className="dashboard-meta-row">
-                            {task.columnName ? <span>{task.columnName}</span> : null}
-                            {task.dueDate ? <span>Due {formatDate(task.dueDate)}</span> : null}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="dashboard-empty-state">
-                    <h3>No tasks yet</h3>
-                    <p>This board does not have any visible tasks in the current workspace context.</p>
-                  </div>
-                )}
-              </DashboardSection>
+              <KanbanBoard
+                board={data}
+                isSavingOrder={isReorderingTasks}
+                onAddTask={(columnId) =>
+                  setModalState({
+                    mode: 'create',
+                    columnId,
+                  })
+                }
+                onEditTask={(task) =>
+                  setModalState({
+                    mode: 'edit',
+                    task,
+                    columnId: task.columnId,
+                  })
+                }
+                onReorder={async (nextBoard, positions) => {
+                  await reorderTasks({
+                    nextBoard,
+                    positions,
+                  })
+                }}
+              />
             </>
           ) : null}
         </div>
       </main>
+
+      {data && modalState ? (
+        <TaskModal
+          mode={modalState.mode}
+          columns={data.columns}
+          members={data.members}
+          task={modalState.mode === 'edit' ? modalState.task : null}
+          selectedColumnId={modalState.columnId}
+          isSubmitting={isCreatingTask || isUpdatingTask}
+          errorMessage={
+            modalState.mode === 'create'
+              ? createTaskError instanceof Error
+                ? createTaskError.message
+                : null
+              : updateTaskError instanceof Error
+                ? updateTaskError.message
+                : null
+          }
+          onClose={() => setModalState(null)}
+          onSubmit={handleTaskSubmit}
+        />
+      ) : null}
     </DashboardLayout>
   )
 }

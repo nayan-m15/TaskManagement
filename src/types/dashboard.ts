@@ -9,6 +9,7 @@ export interface DashboardWorkspace {
 export interface DashboardBoard {
   id: string
   name: string
+  title?: string
   workspaceId?: string
   workspaceName?: string
   createdAt?: string
