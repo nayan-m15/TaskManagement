@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle'
 import MainLayout from '../layouts/MainLayout'
 import { useAuth } from '../hooks/useAuth'
 import { ROUTES } from '../routes/routeConstants'
-import '../App.css'
 
 const features = [
   {
@@ -32,6 +32,12 @@ const features = [
   },
 ] as const
 
+const heroHighlights = [
+  { label: 'Focused workflow', value: 'Boards, tasks, and priorities in one calm view' },
+  { label: 'Clear ownership', value: 'Track accountable work without noisy handoffs' },
+  { label: 'Reliable progress', value: 'Keep deadlines visible and status easy to scan' },
+] as const
+
 const workflowSteps = [
   'Create a workspace',
   'Add a board',
@@ -50,48 +56,73 @@ function HomePage() {
           <Link className="home-brand" to={ROUTES.home}>
             TaskFlow
           </Link>
-          <ul className="home-nav-list">
-            <li>
-              <a href="#features">Features</a>
-            </li>
-            <li>
-              <a href="#workflow">Workflow</a>
-            </li>
-            <li>
-              <Link to={ROUTES.register}>Get started</Link>
-            </li>
-            <li>
-              <Link to={ROUTES.login}>Log in</Link>
-            </li>
-            {isAuthenticated ? (
+          <div className="home-nav-actions">
+            <ul className="home-nav-list">
               <li>
-                <Link to={ROUTES.dashboard}>Dashboard</Link>
+                <a href="#features">Features</a>
               </li>
-            ) : null}
-          </ul>
+              <li>
+                <a href="#workflow">Workflow</a>
+              </li>
+              <li>
+                <Link to={ROUTES.register}>Get started</Link>
+              </li>
+              <li>
+                <Link to={ROUTES.login}>Log in</Link>
+              </li>
+              {isAuthenticated ? (
+                <li>
+                  <Link to={ROUTES.dashboard}>Dashboard</Link>
+                </li>
+              ) : null}
+            </ul>
+            <ThemeToggle />
+          </div>
         </nav>
       </header>
 
       <section className="home-hero" aria-labelledby="home-title">
-        <p className="home-eyebrow">Task management for focused teams</p>
-        <h1 id="home-title">Plan work clearly, move tasks with confidence, and keep progress visible.</h1>
-        <p className="home-lead">
-          TaskFlow helps teams manage workspaces, boards, deadlines, and daily
-          execution in one calm, reliable place.
-        </p>
-        <nav className="home-actions" aria-label="Primary actions">
-          <Link className="home-button home-button-primary" to={ROUTES.register}>
-            Get started
-          </Link>
-          <Link className="home-button home-button-secondary" to={ROUTES.login}>
-            Log in
-          </Link>
-          {isAuthenticated ? (
-            <Link className="home-button home-button-tertiary" to={ROUTES.dashboard}>
-              Open dashboard
+        <div className="home-hero-copy">
+          <p className="home-eyebrow">Task management for focused teams</p>
+          <h1 id="home-title">
+            Plan work clearly, move tasks with confidence, and keep progress visible.
+          </h1>
+          <p className="home-lead">
+            TaskFlow helps teams manage workspaces, boards, deadlines, and daily
+            execution in one calm, reliable place.
+          </p>
+          <nav className="home-actions" aria-label="Primary actions">
+            <Link className="home-button home-button-primary" to={ROUTES.register}>
+              Get started
             </Link>
-          ) : null}
-        </nav>
+            <Link className="home-button home-button-secondary" to={ROUTES.login}>
+              Log in
+            </Link>
+            {isAuthenticated ? (
+              <Link className="home-button home-button-tertiary" to={ROUTES.dashboard}>
+                Open dashboard
+              </Link>
+            ) : null}
+          </nav>
+        </div>
+
+        <aside className="home-preview-card" aria-label="Workspace preview">
+          <div className="home-preview-header">
+            <div>
+              <p className="home-preview-eyebrow">Workspace overview</p>
+              <h2>Built for steady execution</h2>
+            </div>
+            <span className="home-status-pill">Live priorities</span>
+          </div>
+          <ul className="home-preview-list">
+            {heroHighlights.map((highlight) => (
+              <li key={highlight.label} className="home-preview-item">
+                <p className="home-preview-label">{highlight.label}</p>
+                <p className="home-preview-value">{highlight.value}</p>
+              </li>
+            ))}
+          </ul>
+        </aside>
       </section>
 
       <section id="features" className="home-section" aria-labelledby="features-title">
@@ -160,6 +191,7 @@ function HomePage() {
 
       <footer className="home-footer">
         <p>TaskFlow keeps planning, priorities, and progress in one dependable workspace.</p>
+        <p className="home-footer-meta">Designed for teams that want structure without clutter.</p>
       </footer>
     </MainLayout>
   )
