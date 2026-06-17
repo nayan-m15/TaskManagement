@@ -28,6 +28,7 @@ interface CreateTaskModalProps {
   userId: string
   workspaces: DashboardWorkspace[]
   boards: DashboardBoard[]
+  isDashboardLoading: boolean
   isOpen: boolean
   onClose: () => void
 }
@@ -36,6 +37,7 @@ function CreateTaskModal({
   userId,
   workspaces,
   boards,
+  isDashboardLoading,
   isOpen,
   onClose,
 }: CreateTaskModalProps) {
@@ -74,6 +76,8 @@ function CreateTaskModal({
         : boards,
     [boards, selectedWorkspaceId],
   )
+  const hasAvailableBoards = boards.length > 0
+  const hasBoardsInSelectedWorkspace = filteredBoards.length > 0
 
   const boardDetails = useKanbanBoard({
     boardId: selectedBoardId || undefined,
@@ -181,10 +185,15 @@ function CreateTaskModal({
           </button>
         </header>
 
-        {boards.length === 0 ? (
+        {isDashboardLoading ? (
+          <div className="dashboard-empty-state">
+            <h3>Loading board options</h3>
+            <p>We are checking which workspaces, boards, columns, and members are available for task creation.</p>
+          </div>
+        ) : !hasAvailableBoards ? (
           <div className="dashboard-empty-state">
             <h3>No boards available yet</h3>
-            <p>Create or join a board before adding tasks from the dashboard.</p>
+            <p>Create or join a board before adding tasks from the dashboard. The button stays available so this state is visible instead of silently failing.</p>
           </div>
         ) : (
           <form className="kanban-task-form" onSubmit={handleSubmit(onSubmit)}>
@@ -209,6 +218,11 @@ function CreateTaskModal({
                     </option>
                   ))}
                 </select>
+                {!hasBoardsInSelectedWorkspace ? (
+                  <p className="auth-message" role="status">
+                    No boards are available in this workspace yet. Choose another workspace or create a board first.
+                  </p>
+                ) : null}
                 {errors.boardId ? (
                   <p className="auth-message auth-message-error">{errors.boardId.message}</p>
                 ) : null}
@@ -352,6 +366,7 @@ function CreateTaskModal({
                   boardDetails.isLoading ||
                   boardDetails.isCreatingTask ||
                   !selectedBoardId ||
+                  !hasBoardsInSelectedWorkspace ||
                   !boardDetails.data?.columns.length
                 }
               >

@@ -152,7 +152,7 @@ function DashboardPage() {
                 <ThemeToggle />
                 <CreateTaskButton
                   onClick={() => setIsCreateTaskOpen(true)}
-                  disabled={!dashboardQuery.data?.boards.length}
+                  disabled={false}
                 />
                 <button
                   type="button"
@@ -182,6 +182,7 @@ function DashboardPage() {
         userId={session.user.id}
         workspaces={dashboardQuery.data?.workspaces ?? []}
         boards={dashboardQuery.data?.boards ?? []}
+        isDashboardLoading={dashboardQuery.isLoading}
         isOpen={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
       />
