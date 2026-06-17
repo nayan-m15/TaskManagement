@@ -138,6 +138,7 @@ function normalizeTask(
   return {
     id,
     title,
+    description: getString(record, ['description', 'details']),
     boardId,
     boardName: relatedBoardName,
     workspaceId:
@@ -149,6 +150,7 @@ function normalizeTask(
     priority: getString(record, ['priority', 'importance']),
     dueDate: getDateValue(record, ['due_date', 'dueDate', 'deadline', 'due_at']),
     assigneeId: getString(record, ['assignee_id', 'assigneeId', 'assigned_to', 'user_id']),
+    createdById: getString(record, ['created_by', 'createdBy']),
     createdAt: getDateValue(record, ['created_at', 'createdAt']),
     updatedAt: getDateValue(record, ['updated_at', 'updatedAt']),
   } satisfies DashboardTask
@@ -563,14 +565,14 @@ async function fetchTasks(client: SupabaseClient, boardsById: Map<string, Dashbo
         fetchRows(
           client,
           'tasks',
-          'id, title, name, board_id, column_id, assignee_id, user_id, assigned_to, status, state, priority, due_date, deadline, created_at, updated_at, board:boards(id, name, title), column:columns(id, name, title)',
+          'id, title, name, description, board_id, column_id, assignee_id, user_id, assigned_to, created_by, status, state, priority, due_date, deadline, created_at, updated_at, board:boards(id, name, title), column:columns(id, name, title)',
           80,
         ),
       async () =>
         fetchRows(
           client,
           'tasks',
-          'id, title, name, board_id, column_id, assignee_id, user_id, assigned_to, status, state, priority, due_date, deadline, created_at, updated_at',
+          'id, title, name, description, board_id, column_id, assignee_id, user_id, assigned_to, created_by, status, state, priority, due_date, deadline, created_at, updated_at',
           80,
         ),
       async () => fetchRows(client, 'board_tasks', '*', 80),
@@ -730,6 +732,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
 
   return {
     workspaces,
+    boards,
+    tasks,
     recentBoards,
     dueSoonTasks,
     assignedTasks,

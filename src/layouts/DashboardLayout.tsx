@@ -1,13 +1,22 @@
 import type { PropsWithChildren } from 'react'
 import ThemeToggle from '../components/ThemeToggle'
 
-function DashboardLayout({ children }: PropsWithChildren) {
+interface DashboardLayoutProps extends PropsWithChildren {
+  showToolbar?: boolean
+}
+
+function DashboardLayout({
+  children,
+  showToolbar = true,
+}: DashboardLayoutProps) {
   return (
     <div className="app-shell">
       <section data-layout="dashboard" className="dashboard-layout">
-        <div className="layout-toolbar">
-          <ThemeToggle />
-        </div>
+        {showToolbar ? (
+          <div className="layout-toolbar">
+            <ThemeToggle />
+          </div>
+        ) : null}
         {children}
       </section>
     </div>

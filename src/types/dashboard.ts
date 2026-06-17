@@ -19,6 +19,7 @@ export interface DashboardBoard {
 export interface DashboardTask {
   id: string
   title: string
+  description?: string
   boardId?: string
   boardName?: string
   workspaceId?: string
@@ -28,6 +29,7 @@ export interface DashboardTask {
   priority?: string
   dueDate?: string
   assigneeId?: string
+  createdById?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -59,12 +61,30 @@ export interface DashboardSummaryStats {
 
 export interface DashboardData {
   workspaces: DashboardWorkspace[]
+  boards: DashboardBoard[]
+  tasks: DashboardTask[]
   recentBoards: DashboardBoard[]
   dueSoonTasks: DashboardTask[]
   assignedTasks: DashboardTask[]
   notifications: DashboardNotification[]
   activityFeed: DashboardActivityItem[]
   summary: DashboardSummaryStats
+  warnings: string[]
+}
+
+export interface DashboardProfile {
+  id: string
+  email?: string | null
+  username?: string | null
+  fullName?: string | null
+  avatarUrl?: string | null
+  bio?: string | null
+}
+
+export interface DashboardProfileSettings {
+  profile: DashboardProfile
+  supported: boolean
+  canEdit: boolean
   warnings: string[]
 }
 

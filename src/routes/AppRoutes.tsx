@@ -6,6 +6,14 @@ import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import DashboardPage from '../pages/DashboardPage'
 import BoardPage from '../pages/BoardPage'
 import NotFoundPage from '../pages/NotFoundPage'
+import DashboardOverviewPage from '../pages/dashboard/DashboardOverviewPage'
+import WorkspacesPage from '../pages/dashboard/WorkspacesPage'
+import BoardsPage from '../pages/dashboard/BoardsPage'
+import TasksPage from '../pages/dashboard/TasksPage'
+import CalendarPage from '../pages/dashboard/CalendarPage'
+import NotificationsPage from '../pages/dashboard/NotificationsPage'
+import ActivityPage from '../pages/dashboard/ActivityPage'
+import SettingsPage from '../pages/dashboard/SettingsPage'
 import ProtectedRoute from './ProtectedRoute'
 import { ROUTES } from './routeConstants'
 
@@ -23,7 +31,16 @@ function AppRoutes() {
             <DashboardPage />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<DashboardOverviewPage />} />
+        <Route path="workspaces" element={<WorkspacesPage />} />
+        <Route path="boards" element={<BoardsPage />} />
+        <Route path="tasks" element={<TasksPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="activity" element={<ActivityPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
       <Route
         path={ROUTES.board}
         element={
