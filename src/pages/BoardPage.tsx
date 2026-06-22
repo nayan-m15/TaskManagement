@@ -4,6 +4,7 @@ import { ChevronLeft, FolderKanban, ListTodo, Users } from 'lucide-react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { useAuth } from '../hooks/useAuth'
 import { useKanbanBoard } from '../hooks/useKanbanBoard'
+import { useWorkspaceManagement } from '../hooks/useWorkspaceManagement'
 import KanbanBoard from '../components/board/KanbanBoard'
 import TaskDrawer from '../components/board/TaskDrawer'
 import { ROUTES } from '../routes/routeConstants'
@@ -26,6 +27,11 @@ function BoardPage() {
   const { boardId } = useParams()
   const { session } = useAuth()
   const [modalState, setModalState] = useState<ModalState>(null)
+  const {
+    repairBoardColumns,
+    isRepairingBoardColumns,
+    repairBoardColumnsError,
+  } = useWorkspaceManagement(session?.user.id)
   const {
     data,
     isLoading,
@@ -209,29 +215,57 @@ function BoardPage() {
                 })}
               </section>
 
-              <KanbanBoard
-                board={data}
-                isSavingOrder={isReorderingTasks}
-                onAddTask={(columnId) =>
-                  setModalState({
-                    mode: 'create',
-                    columnId,
-                  })
-                }
-                onEditTask={(task) =>
-                  setModalState({
-                    mode: 'edit',
-                    task,
-                    columnId: task.columnId,
-                  })
-                }
-                onReorder={async (nextBoard, positions) => {
-                  await reorderTasks({
-                    nextBoard,
-                    positions,
-                  })
-                }}
-              />
+              {!data.columns.length ? (
+                <section className="dashboard-feedback-card">
+                  <p className="dashboard-card-label">Columns missing</p>
+                  <h2>This board needs default columns</h2>
+                  <p>
+                    Tasks require at least one column. Repair the board to recreate Todo, In
+                    Progress, Review, and Done safely.
+                  </p>
+                  {repairBoardColumnsError ? (
+                    <p className="auth-message auth-message-error" role="alert">
+                      {repairBoardColumnsError instanceof Error
+                        ? repairBoardColumnsError.message
+                        : 'Unable to repair board columns.'}
+                    </p>
+                  ) : null}
+                  <div className="dashboard-header-actions">
+                    <button
+                      type="button"
+                      className="auth-submit"
+                      disabled={isRepairingBoardColumns}
+                      onClick={() => void repairBoardColumns(boardId)}
+                    >
+                      {isRepairingBoardColumns ? 'Repairing columns...' : 'Repair Columns'}
+                    </button>
+                  </div>
+                </section>
+              ) : (
+                <KanbanBoard
+                  board={data}
+                  isSavingOrder={isReorderingTasks}
+                  onAddTask={(columnId) =>
+                    setModalState({
+                      mode: 'create',
+                      columnId,
+                    })
+                  }
+                  onEditTask={(task) =>
+                    setModalState({
+                      mode: 'edit',
+                      task,
+                      columnId: task.columnId,
+                    })
+                  }
+                  onReorder={async (nextBoard, positions) => {
+                    await reorderTasks({
+                      nextBoard,
+                      positions,
+                    })
+                  }}
+                />
+              )}
             </>
           ) : null}
         </div>

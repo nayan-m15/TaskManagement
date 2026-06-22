@@ -541,41 +541,106 @@ async function fetchBoards(
   client: SupabaseClient,
   workspacesById: Map<string, DashboardWorkspace>,
 ) {
+  const workspaceIds = Array.from(workspacesById.keys())
+
+  if (workspaceIds.length === 0) {
+    return [] as DashboardBoard[]
+  }
+
   const rows =
     (await resolveCandidate<UnknownRecord[]>([
-      async () =>
-        fetchRows(
-          client,
-          'boards',
-          'id, name, title, workspace_id, created_at, updated_at, workspace:workspaces(id, name)',
-          24,
-        ),
-      async () =>
-        fetchRows(client, 'boards', 'id, name, title, workspace_id, created_at, updated_at', 24),
-      async () => fetchRows(client, 'project_boards', 'id, name, title, workspace_id, created_at, updated_at', 24),
+      async () => {
+        const { data, error } = await client
+          .from('boards')
+          .select('id, name, title, workspace_id, created_at, updated_at, workspace:workspaces(id, name)')
+          .in('workspace_id', workspaceIds)
+          .limit(24)
+
+        if (error) {
+          throw error
+        }
+
+        return (data ?? []) as unknown as UnknownRecord[]
+      },
+      async () => {
+        const { data, error } = await client
+          .from('boards')
+          .select('id, name, title, workspace_id, created_at, updated_at')
+          .in('workspace_id', workspaceIds)
+          .limit(24)
+
+        if (error) {
+          throw error
+        }
+
+        return (data ?? []) as unknown as UnknownRecord[]
+      },
+      async () => {
+        const { data, error } = await client
+          .from('project_boards')
+          .select('id, name, title, workspace_id, created_at, updated_at')
+          .in('workspace_id', workspaceIds)
+          .limit(24)
+
+        if (error) {
+          throw error
+        }
+
+        return (data ?? []) as unknown as UnknownRecord[]
+      },
     ])) ?? []
 
   return uniqueById(rows.map((row) => normalizeBoard(row, workspacesById)).filter(isDefined))
 }
 
 async function fetchTasks(client: SupabaseClient, boardsById: Map<string, DashboardBoard>) {
+  const boardIds = Array.from(boardsById.keys())
+
+  if (boardIds.length === 0) {
+    return [] as DashboardTask[]
+  }
+
   const rows =
     (await resolveCandidate<UnknownRecord[]>([
-      async () =>
-        fetchRows(
-          client,
-          'tasks',
-          'id, title, name, description, board_id, column_id, assignee_id, user_id, assigned_to, created_by, status, state, priority, due_date, deadline, created_at, updated_at, board:boards(id, name, title), column:columns(id, name, title)',
-          80,
-        ),
-      async () =>
-        fetchRows(
-          client,
-          'tasks',
-          'id, title, name, description, board_id, column_id, assignee_id, user_id, assigned_to, created_by, status, state, priority, due_date, deadline, created_at, updated_at',
-          80,
-        ),
-      async () => fetchRows(client, 'board_tasks', '*', 80),
+      async () => {
+        const { data, error } = await client
+          .from('tasks')
+          .select(
+            'id, title, name, description, board_id, column_id, assignee_id, user_id, assigned_to, created_by, status, state, priority, due_date, deadline, created_at, updated_at, board:boards(id, name, title), column:columns(id, name, title)',
+          )
+          .in('board_id', boardIds)
+          .limit(80)
+
+        if (error) {
+          throw error
+        }
+
+        return (data ?? []) as unknown as UnknownRecord[]
+      },
+      async () => {
+        const { data, error } = await client
+          .from('tasks')
+          .select(
+            'id, title, name, description, board_id, column_id, assignee_id, user_id, assigned_to, created_by, status, state, priority, due_date, deadline, created_at, updated_at',
+          )
+          .in('board_id', boardIds)
+          .limit(80)
+
+        if (error) {
+          throw error
+        }
+
+        return (data ?? []) as unknown as UnknownRecord[]
+      },
+      async () => {
+        const { data, error } = await client.from('board_tasks').select('*').in('board_id', boardIds).limit(80)
+
+        if (error) {
+          throw error
+        }
+
+        return (data ?? []) as unknown as UnknownRecord[]
+      },
     ])) ?? []
 
   return uniqueById(rows.map((row) => normalizeTask(row, boardsById)).filter(isDefined))

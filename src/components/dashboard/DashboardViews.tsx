@@ -57,16 +57,25 @@ export function WorkspaceList({
   workspaces,
   workspaceTaskCounts,
   workspaceBoardCounts,
+  onCreateWorkspace,
+  onCreateBoard,
 }: {
   workspaces: DashboardWorkspace[]
   workspaceTaskCounts?: Map<string, number>
   workspaceBoardCounts?: Map<string, number>
+  onCreateWorkspace?: () => void
+  onCreateBoard?: (workspaceId?: string) => void
 }) {
   if (workspaces.length === 0) {
     return (
       <DashboardEmptyState
         title="No workspaces yet"
-        message="This account does not have any visible workspaces yet."
+        message="Create a workspace first so you can add boards and then start creating tasks."
+        action={
+          <button type="button" className="auth-submit" onClick={onCreateWorkspace}>
+            Create Workspace
+          </button>
+        }
       />
     )
   }
@@ -97,6 +106,15 @@ export function WorkspaceList({
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
+          <div className="dashboard-link-row">
+            <button
+              type="button"
+              className="auth-submit auth-submit-secondary dashboard-inline-action"
+              onClick={() => onCreateBoard?.(workspace.id)}
+            >
+              Create Board
+            </button>
+          </div>
         </li>
       ))}
     </ul>
@@ -106,15 +124,22 @@ export function WorkspaceList({
 export function BoardList({
   boards,
   taskCountsByBoardId,
+  onCreateBoard,
 }: {
   boards: DashboardBoard[]
   taskCountsByBoardId?: Map<string, number>
+  onCreateBoard?: () => void
 }) {
   if (boards.length === 0) {
     return (
       <DashboardEmptyState
         title="No boards yet"
-        message="Create or join a board and it will appear here once it is visible to your session."
+        message="Create a board inside a workspace before adding tasks."
+        action={
+          <button type="button" className="auth-submit" onClick={onCreateBoard}>
+            Create Board
+          </button>
+        }
       />
     )
   }

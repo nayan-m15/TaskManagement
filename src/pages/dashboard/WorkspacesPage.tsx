@@ -6,7 +6,8 @@ import {
 import { useDashboardOutlet } from './dashboardContext'
 
 function WorkspacesPage() {
-  const { data, displayName, isError, isLoading } = useDashboardOutlet()
+  const { data, displayName, isError, isLoading, openCreateWorkspace, openCreateBoard } =
+    useDashboardOutlet()
 
   const workspaceTaskCounts = new Map<string, number>()
   const workspaceBoardCounts = new Map<string, number>()
@@ -62,12 +63,21 @@ function WorkspacesPage() {
           eyebrow="Membership"
           title="Your workspaces"
           description="Workspace summaries include the number of visible boards and tasks so you can jump into the right context quickly."
-          action={<span className="home-status-pill">{data.workspaces.length} total</span>}
+          action={
+            <>
+              <span className="home-status-pill">{data.workspaces.length} total</span>
+              <button type="button" className="auth-submit auth-submit-secondary" onClick={openCreateWorkspace}>
+                Create Workspace
+              </button>
+            </>
+          }
         >
           <WorkspaceList
             workspaces={data.workspaces}
             workspaceTaskCounts={workspaceTaskCounts}
             workspaceBoardCounts={workspaceBoardCounts}
+            onCreateWorkspace={openCreateWorkspace}
+            onCreateBoard={openCreateBoard}
           />
         </DashboardSection>
       ) : null}

@@ -12,6 +12,9 @@ export interface DashboardOutletContextValue {
   refetch: () => Promise<unknown>
   isLoggingOut: boolean
   logoutError: string | null
+  openCreateWorkspace: () => void
+  openCreateBoard: (workspaceId?: string) => void
+  openCreateTask: () => void
 }
 
 export function useDashboardOutlet() {

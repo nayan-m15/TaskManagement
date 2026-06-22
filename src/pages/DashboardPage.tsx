@@ -15,8 +15,10 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import ThemeToggle from '../components/ThemeToggle'
+import CreateBoardModal from '../components/dashboard/CreateBoardModal'
 import CreateTaskButton from '../components/dashboard/CreateTaskButton'
 import CreateTaskModal from '../components/dashboard/CreateTaskModal'
+import CreateWorkspaceModal from '../components/dashboard/CreateWorkspaceModal'
 import { useAuth } from '../hooks/useAuth'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { logout } from '../services/authService'
@@ -45,7 +47,14 @@ function DashboardPage() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false)
+  const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false)
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
+  const [boardWorkspaceId, setBoardWorkspaceId] = useState<string | undefined>(undefined)
+  const [dashboardFeedback, setDashboardFeedback] = useState<{
+    tone: 'success' | 'error'
+    message: string
+  } | null>(null)
   const dashboardQuery = useDashboardData(session?.user.id)
 
   const displayName =
@@ -72,6 +81,22 @@ function DashboardPage() {
     return null
   }
 
+  function openCreateWorkspace() {
+    setDashboardFeedback(null)
+    setIsCreateWorkspaceOpen(true)
+  }
+
+  function openCreateBoard(workspaceId?: string) {
+    setDashboardFeedback(null)
+    setBoardWorkspaceId(workspaceId)
+    setIsCreateBoardOpen(true)
+  }
+
+  function openCreateTask() {
+    setDashboardFeedback(null)
+    setIsCreateTaskOpen(true)
+  }
+
   const outletContext: DashboardOutletContextValue = {
     session,
     displayName,
@@ -82,6 +107,9 @@ function DashboardPage() {
     refetch: dashboardQuery.refetch,
     isLoggingOut,
     logoutError,
+    openCreateWorkspace,
+    openCreateBoard,
+    openCreateTask,
   }
 
   return (
@@ -150,8 +178,22 @@ function DashboardPage() {
               </div>
               <div className="dashboard-app-toolbar-actions">
                 <ThemeToggle />
+                <button
+                  type="button"
+                  className="auth-submit auth-submit-secondary"
+                  onClick={openCreateWorkspace}
+                >
+                  Create Workspace
+                </button>
+                <button
+                  type="button"
+                  className="auth-submit auth-submit-secondary"
+                  onClick={() => openCreateBoard()}
+                >
+                  Create Board
+                </button>
                 <CreateTaskButton
-                  onClick={() => setIsCreateTaskOpen(true)}
+                  onClick={openCreateTask}
                   disabled={false}
                 />
                 <button
@@ -167,6 +209,18 @@ function DashboardPage() {
             </div>
 
             <div className="dashboard-route-content">
+              {dashboardFeedback ? (
+                <p
+                  className={`auth-message ${
+                    dashboardFeedback.tone === 'success'
+                      ? 'auth-message-success'
+                      : 'auth-message-error'
+                  }`}
+                  role={dashboardFeedback.tone === 'success' ? 'status' : 'alert'}
+                >
+                  {dashboardFeedback.message}
+                </p>
+              ) : null}
               <Outlet context={outletContext} />
               {logoutError ? (
                 <p className="auth-message auth-message-error" role="alert">
@@ -185,6 +239,47 @@ function DashboardPage() {
         isDashboardLoading={dashboardQuery.isLoading}
         isOpen={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
+        onRequestCreateWorkspace={() => {
+          setIsCreateTaskOpen(false)
+          openCreateWorkspace()
+        }}
+        onRequestCreateBoard={(workspaceId) => {
+          setIsCreateTaskOpen(false)
+          openCreateBoard(workspaceId)
+        }}
+      />
+
+      <CreateWorkspaceModal
+        userId={session.user.id}
+        isOpen={isCreateWorkspaceOpen}
+        onClose={() => setIsCreateWorkspaceOpen(false)}
+        onCreated={(workspaceName) => {
+          setDashboardFeedback({
+            tone: 'success',
+            message: `Workspace "${workspaceName}" is ready.`,
+          })
+        }}
+      />
+
+      <CreateBoardModal
+        userId={session.user.id}
+        workspaces={dashboardQuery.data?.workspaces ?? []}
+        isOpen={isCreateBoardOpen}
+        initialWorkspaceId={boardWorkspaceId}
+        onClose={() => {
+          setIsCreateBoardOpen(false)
+          setBoardWorkspaceId(undefined)
+        }}
+        onRequestCreateWorkspace={() => {
+          setIsCreateBoardOpen(false)
+          openCreateWorkspace()
+        }}
+        onCreated={(boardName) => {
+          setDashboardFeedback({
+            tone: 'success',
+            message: `Board "${boardName}" was created with default columns.`,
+          })
+        }}
       />
     </DashboardLayout>
   )

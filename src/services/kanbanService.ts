@@ -1029,6 +1029,17 @@ export async function getKanbanBoard(boardId: string, userId: string) {
   return buildBoardDetails(board, columns, taskResult.tasks, members)
 }
 
+export async function repairBoardColumns(boardId: string, userId: string) {
+  const client = getSupabaseClient()
+  const board = await ensureBoardAccess(client, boardId, userId)
+
+  if (!board) {
+    throw new Error('Board not found.')
+  }
+
+  return ensureDefaultColumns(client, boardId)
+}
+
 export async function getTaskDetails(taskId: string, userId: string) {
   const client = getSupabaseClient()
   const context = await ensureTaskAccess(client, taskId, userId)

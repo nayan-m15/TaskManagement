@@ -6,7 +6,7 @@ interface CreateTaskButtonProps {
 function CreateTaskButton({ onClick, disabled = false }: CreateTaskButtonProps) {
   return (
     <button type="button" className="auth-submit" onClick={onClick} disabled={disabled}>
-      Create task
+      New Task
     </button>
   )
 }

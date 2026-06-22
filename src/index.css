@@ -1109,6 +1109,14 @@ img {
   overflow: auto;
 }
 
+.dashboard-creation-modal {
+  width: min(100% - 32px, 640px);
+}
+
+.dashboard-inline-action {
+  min-height: 44px;
+}
+
 .auth-field-span-2 {
   grid-column: 1 / -1;
 }

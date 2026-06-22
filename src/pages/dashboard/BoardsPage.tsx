@@ -8,7 +8,7 @@ import {
 import { useDashboardOutlet } from './dashboardContext'
 
 function BoardsPage() {
-  const { data, isError, isLoading } = useDashboardOutlet()
+  const { data, isError, isLoading, openCreateBoard, openCreateWorkspace } = useDashboardOutlet()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedWorkspaceId = searchParams.get('workspace') ?? ''
 
@@ -37,29 +37,42 @@ function BoardsPage() {
         title="Boards you can access"
         description="Review active boards across your workspaces, filter by workspace, and jump directly into the kanban view."
         actions={
-          <label className="dashboard-select-field">
-            <span className="dashboard-card-label">Workspace filter</span>
-            <select
-              className="kanban-input"
-              value={selectedWorkspaceId}
-              onChange={(event) => {
-                const nextWorkspaceId = event.target.value
-                if (!nextWorkspaceId) {
-                  setSearchParams({})
-                  return
-                }
+          <>
+            <label className="dashboard-select-field">
+              <span className="dashboard-card-label">Workspace filter</span>
+              <select
+                className="kanban-input"
+                value={selectedWorkspaceId}
+                onChange={(event) => {
+                  const nextWorkspaceId = event.target.value
+                  if (!nextWorkspaceId) {
+                    setSearchParams({})
+                    return
+                  }
 
-                setSearchParams({ workspace: nextWorkspaceId })
-              }}
+                  setSearchParams({ workspace: nextWorkspaceId })
+                }}
+              >
+                <option value="">All workspaces</option>
+                {(data?.workspaces ?? []).map((workspace) => (
+                  <option key={workspace.id} value={workspace.id}>
+                    {workspace.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="auth-submit auth-submit-secondary"
+              onClick={() =>
+                data?.workspaces.length
+                  ? openCreateBoard(selectedWorkspaceId || data.workspaces[0]?.id)
+                  : openCreateWorkspace()
+              }
             >
-              <option value="">All workspaces</option>
-              {(data?.workspaces ?? []).map((workspace) => (
-                <option key={workspace.id} value={workspace.id}>
-                  {workspace.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              Create Board
+            </button>
+          </>
         }
       />
 
@@ -86,7 +99,15 @@ function BoardsPage() {
           description="Each board keeps its existing realtime kanban workflow. Opening one takes you to the full board page."
           action={<span className="home-status-pill">{boards.length} boards</span>}
         >
-          <BoardList boards={boards} taskCountsByBoardId={taskCountsByBoardId} />
+          <BoardList
+            boards={boards}
+            taskCountsByBoardId={taskCountsByBoardId}
+            onCreateBoard={() =>
+              data?.workspaces.length
+                ? openCreateBoard(selectedWorkspaceId || data.workspaces[0]?.id)
+                : openCreateWorkspace()
+            }
+          />
         </DashboardSection>
       ) : null}
     </>

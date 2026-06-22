@@ -31,6 +31,8 @@ interface CreateTaskModalProps {
   isDashboardLoading: boolean
   isOpen: boolean
   onClose: () => void
+  onRequestCreateWorkspace: () => void
+  onRequestCreateBoard: (workspaceId?: string) => void
 }
 
 function CreateTaskModal({
@@ -40,6 +42,8 @@ function CreateTaskModal({
   isDashboardLoading,
   isOpen,
   onClose,
+  onRequestCreateWorkspace,
+  onRequestCreateBoard,
 }: CreateTaskModalProps) {
   const queryClient = useQueryClient()
   const defaultBoard = boards[0]
@@ -77,6 +81,7 @@ function CreateTaskModal({
     [boards, selectedWorkspaceId],
   )
   const hasAvailableBoards = boards.length > 0
+  const hasAvailableWorkspaces = workspaces.length > 0
   const hasBoardsInSelectedWorkspace = filteredBoards.length > 0
 
   const boardDetails = useKanbanBoard({
@@ -190,10 +195,25 @@ function CreateTaskModal({
             <h3>Loading board options</h3>
             <p>We are checking which workspaces, boards, columns, and members are available for task creation.</p>
           </div>
+        ) : !hasAvailableWorkspaces ? (
+          <div className="dashboard-empty-state">
+            <h3>Create a workspace first</h3>
+            <p>You need a workspace before you can create tasks, because tasks live inside boards that belong to a workspace.</p>
+            <button type="button" className="auth-submit" onClick={onRequestCreateWorkspace}>
+              Create Workspace
+            </button>
+          </div>
         ) : !hasAvailableBoards ? (
           <div className="dashboard-empty-state">
-            <h3>No boards available yet</h3>
-            <p>Create or join a board before adding tasks from the dashboard. The button stays available so this state is visible instead of silently failing.</p>
+            <h3>Create a board first</h3>
+            <p>You already have workspace access, but there is no board available yet. Create a board to unlock task creation.</p>
+            <button
+              type="button"
+              className="auth-submit"
+              onClick={() => onRequestCreateBoard(selectedWorkspaceId || workspaces[0]?.id)}
+            >
+              Create Board
+            </button>
           </div>
         ) : (
           <form className="kanban-task-form" onSubmit={handleSubmit(onSubmit)}>
@@ -222,6 +242,15 @@ function CreateTaskModal({
                   <p className="auth-message" role="status">
                     No boards are available in this workspace yet. Choose another workspace or create a board first.
                   </p>
+                ) : null}
+                {!hasBoardsInSelectedWorkspace && selectedWorkspaceId ? (
+                  <button
+                    type="button"
+                    className="auth-submit auth-submit-secondary"
+                    onClick={() => onRequestCreateBoard(selectedWorkspaceId)}
+                  >
+                    Create Board
+                  </button>
                 ) : null}
                 {errors.boardId ? (
                   <p className="auth-message auth-message-error">{errors.boardId.message}</p>
@@ -336,6 +365,12 @@ function CreateTaskModal({
             {boardDetails.isLoading ? (
               <p className="auth-message" role="status">
                 Loading board members, columns, and labels...
+              </p>
+            ) : null}
+
+            {!boardDetails.isLoading && selectedBoardId && boardDetails.data && !boardDetails.data.columns.length ? (
+              <p className="auth-message" role="status">
+                This board has no columns yet. Default columns will be repaired before you can add tasks.
               </p>
             ) : null}
 
